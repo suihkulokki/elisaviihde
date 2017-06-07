@@ -41,10 +41,14 @@ def main():
 
   with open(datadir + "recording_data.pkl", "rb") as input_data:
     allrecordings = pickle.load(input_data)
-   
-  # Ask password securely on command line
-  password = getpass.getpass('Password: ')
-    
+
+  password = keyring.get_password("elisaviihde", username)
+  if password is None:
+          # Ask password securely on command line
+          password = getpass.getpass('Password: ')
+          keyring.set_password("elisaviihde", username, password)
+
+
   # Init elisa session
   try:
     elisa = elisaviihde.elisaviihde(verbose)
