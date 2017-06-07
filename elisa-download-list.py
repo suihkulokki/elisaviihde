@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import getopt, sys, getpass, elisaviihde, os, re
 import cPickle as pickle
 from subprocess import call

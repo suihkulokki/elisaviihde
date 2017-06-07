@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Elisa Viihde API Python implementation usage demo
 
 import getopt, sys, getpass, elisaviihde, os, re, keyring

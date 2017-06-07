@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Elisa Viihde API Python implementation tests
 # License: GPLv3
 # Author: Juho Tykkala

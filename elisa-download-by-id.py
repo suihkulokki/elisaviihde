@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import getopt, sys, getpass, elisaviihde, os, re, keyring
 from subprocess import call
 

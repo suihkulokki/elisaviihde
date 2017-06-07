@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import getopt, sys, getpass, elisaviihde, os, re, keyring
 import cPickle as pickle
 
