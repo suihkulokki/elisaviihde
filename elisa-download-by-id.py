@@ -1,4 +1,5 @@
-import getopt, sys, getpass, elisaviihde, os, re
+#!/usr/bin/python
+import getopt, sys, getpass, elisaviihde, os, re, keyring
 from subprocess import call
 
 def main():
@@ -30,8 +31,12 @@ def main():
       print "ERROR: username or programId missing"
       sys.exit(2)
       
-  # Ask password securely on command line
-  password = getpass.getpass('Password: ')
+  password = keyring.get_password("elisaviihde", username)
+  if password is None:
+      # Ask password securely on command line
+      password = getpass.getpass('Password: ')
+      keyring.set_password("elisaviihde", username, password)
+
     
   # Init elisa session
   try:

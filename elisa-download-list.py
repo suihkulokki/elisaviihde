@@ -1,4 +1,5 @@
-import getopt, sys, getpass, elisaviihde, os, re
+#!/usr/bin/python
+import getopt, sys, getpass, elisaviihde, os, re, keyring
 import cPickle as pickle
 from subprocess import call
 from time import sleep
@@ -19,7 +20,7 @@ def main():
   listfile = None
   verbose = False
 
-  datadir = "/home/vkyrki/git/elisaviihde/"
+  datadir = os.path.dirname(os.path.realpath(__file__))
   
   # Read arg data
   for o, a in opts:
@@ -39,12 +40,16 @@ def main():
   except Exception as err:
     print "ERROR: Opening listfile failed, " + err
 
-  with open(datadir + "recording_data.pkl", "rb") as input_data:
+  with open(datadir + "/recording_data.pkl", "rb") as input_data:
     allrecordings = pickle.load(input_data)
-   
-  # Ask password securely on command line
-  password = getpass.getpass('Password: ')
-    
+
+  password = keyring.get_password("elisaviihde", username)
+  if password is None:
+          # Ask password securely on command line
+          password = getpass.getpass('Password: ')
+          keyring.set_password("elisaviihde", username, password)
+
+
   # Init elisa session
   try:
     elisa = elisaviihde.elisaviihde(verbose)
