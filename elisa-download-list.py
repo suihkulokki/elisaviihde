@@ -1,5 +1,5 @@
 #!/usr/bin/python
-import getopt, sys, getpass, elisaviihde, os, re
+import getopt, sys, getpass, elisaviihde, os, re, keyring
 import cPickle as pickle
 from subprocess import call
 from time import sleep
@@ -20,7 +20,7 @@ def main():
   listfile = None
   verbose = False
 
-  datadir = "/home/vkyrki/git/elisaviihde/"
+  datadir = os.path.dirname(os.path.realpath(__file__))
   
   # Read arg data
   for o, a in opts:
