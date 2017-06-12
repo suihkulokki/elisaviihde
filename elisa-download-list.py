@@ -40,7 +40,7 @@ def main():
   except Exception as err:
     print "ERROR: Opening listfile failed, " + err
 
-  with open(datadir + "recording_data.pkl", "rb") as input_data:
+  with open(datadir + "/recording_data.pkl", "rb") as input_data:
     allrecordings = pickle.load(input_data)
 
   password = keyring.get_password("elisaviihde", username)
