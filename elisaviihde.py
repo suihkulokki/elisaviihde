@@ -5,6 +5,7 @@
 # https://github.com/enyone/elisaviihde
 
 import requests, json, re, time, datetime, math
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 class elisaviihde:
   # Init args
@@ -20,6 +21,7 @@ class elisaviihde:
   
   def __init__(self, verbose=False):
     #    urllib3.disable_warnings()
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     # Init session to store cookies
     self.verbose = verbose
     self.session = requests.Session()
