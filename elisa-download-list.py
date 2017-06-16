@@ -109,7 +109,7 @@ def main():
             outfilename.decode("utf8") + '.mkv'
             ]
 
-    print "Starting encoding"
+    print "Starting encoding: " + outfilename.decode("utf8")
 
     try:
         returncode = call(ffmpeg_command)
