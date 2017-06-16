@@ -83,40 +83,38 @@ def main():
       continue
 
     print "Processing " + programId + ", " + prog["name"]
-    deinterlace = "" # "-vf yadif=0 "
-    subtitles = ""
 
-    if re.match('Yle', prog["channel"]):
-      subtitles = '-filter_complex "[0:v][0:s]overlay" '
-      print "From YLE channel " + prog["channel"] + ", overlaying subtitles"
-      
     try:
       streamuri = elisa.getstreamuri(programId)
     except Exception as exp:
       print "WARNING: Stream not found, skipping"
       continue
 
-    # input stream and codec options
-    callstr = 'ffmpeg -i "' + streamuri + '" ' + subtitles + '-c:v libx264 -preset medium -crf 22 -c:a aac -strict experimental -sn -loglevel fatal '
-    # possible deinterlace plus description metadata
-    callstr = callstr + deinterlace + '-metadata description="' + prog["description"] + '" '
-    # title metadata    
-    callstr = callstr + '-metadata title="' + outfilename.decode("utf8") + '" '
-    # output filename (&type/Matroska)
-    callstr = callstr + '"' + outfilename.decode("utf8") + '.mkv"'
+    ffmpeg_command = [ "ffmpeg", "-i", streamuri ]
 
-    #print callstr
+    if re.match('Yle', prog["channel"]):
+      ffmpeg_command += [ '-filter_complex', "[0:v][0:s]overlay" ]
+      print "From YLE channel " + prog["channel"] + ", overlaying subtitles"
+
+    # input stream and codec options
+    ffmpeg_command += ['-c:v', 'libx264', '-preset', 'medium', '-crf','22',
+            '-c:a', 'aac', '-strict', 'experimental', '-sn', '-loglevel', 'fatal',
+            '-metadata', 'description=' + prog["description"],
+            '-metadata', 'title='+ outfilename.decode("utf8"),
+            outfilename.decode("utf8") + '.mkv'
+            ]
+
     print "Starting encoding"
 
-    try: 
-      returncode = call(callstr, shell=True)
+    try:
+        returncode = call(ffmpeg_command)
     except KeyboardInterrupt as exp:
       print "Interrupted from keyboard, exiting"
       os.remove(outfilename.decode("utf8")+".mkv")
       exit(0)
       
     if returncode:
-      print "WARNING: Possible ffmpeg failure, returncode " + str(returncode)
+      print "=================== WARNING: Possible ffmpeg failure, returncode " + str(returncode)
     
     # Close session (new one opened for each file)
     try:
