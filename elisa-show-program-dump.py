@@ -2,8 +2,6 @@
 import re, sys, getopt
 import cPickle as pickle
 
-import codecs
-
 def main():
   # parse command line
   folderid = None
@@ -28,7 +26,7 @@ def main():
     allrecordings = pickle.load(input)
 
   if outfile:
-    of = codecs.open(outfile, "w", "utf-8")
+    of = open(outfile, "w")
         
   totaltime = 0
   for rec in allrecordings:
@@ -88,11 +86,12 @@ def main():
       filename = re.sub(':', '-', filename)
       filename = re.sub('\?', '', filename)
       filename = re.sub(' +$', '', filename)
+      filename = unicode(filename).encode("utf8")
 
       rec["filename"] = filename
 
       print str(rec["programId"]) + ": " + filename
-      print rec["description"]
+      print unicode(rec["description"]).encode("utf8")
       
       if of: print >> of,  str(rec["programId"]) + ": " + filename
 

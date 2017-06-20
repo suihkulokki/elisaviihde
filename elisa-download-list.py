@@ -79,7 +79,7 @@ def main():
     if verbose: print match.group(1) + " " + match.group(2)
 
     programId = match.group(1)
-    outfilename = match.group(2)
+    outfilename = match.group(2).decode("utf8")
 
     try:
       prog = next(x for x in allrecordings if x["programId"]==int(programId))
@@ -105,17 +105,17 @@ def main():
     ffmpeg_command += ['-c:v', 'libx264', '-preset', 'medium', '-crf','22',
             '-c:a', 'aac', '-strict', 'experimental', '-sn', '-loglevel', 'fatal',
             '-metadata', 'description=' + prog["description"],
-            '-metadata', 'title='+ outfilename.decode("utf8"),
-            outfilename.decode("utf8") + '.mkv'
+            '-metadata', 'title='+ outfilename,
+            outfilename + '.mkv'
             ]
 
-    print "Starting encoding: " + outfilename.decode("utf8")
+    print "Starting encoding: " + outfilename
 
     try:
         returncode = call(ffmpeg_command)
     except KeyboardInterrupt as exp:
       print "Interrupted from keyboard, exiting"
-      os.remove(outfilename.decode("utf8")+".mkv")
+      os.remove(outfilename+".mkv")
       exit(0)
       
     if returncode:
