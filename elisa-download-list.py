@@ -7,27 +7,38 @@ from time import sleep
 def main():
   # Parse command line args
   if len(sys.argv[1:]) < 4:
-    print "ERROR: Usage:", sys.argv[0], "[-u username -l listfile]" 
+    print "ERROR: Usage:", sys.argv[0], "[-u username -l listfile]"
+    print "        -s burn subtitles -2 alternative burn subtitles"
+    print "        -d debug"
     sys.exit(2)
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "u:l:", ["username"])
+    opts, args = getopt.getopt(sys.argv[1:], "d2su:l:", ["username"])
   except getopt.GetoptError as err:
     print "ERROR:", str(err)
-    sys.exit(2) 
-  
+    sys.exit(2)
+
   # Init args
   username = ""
   listfile = None
   verbose = False
 
   datadir = os.path.dirname(os.path.realpath(__file__))
-  
+  debug = False
+  subtitles = False
+  subtitles2 = False
+
   # Read arg data
   for o, a in opts:
     if o == "-l":
       listfile = a
     elif o in ("-u", "--username"):
       username = a
+    elif o == "-d":
+      debug = True
+    elif o == "-s":
+      subtitles = True
+    elif o == "-2":
+      subtitles2 = True
     else:
       assert False, "unhandled option"
 
@@ -38,7 +49,7 @@ def main():
   try:
     input = open(listfile,"r")
   except Exception as err:
-    print "ERROR: Opening listfile failed, " + err
+    print "ERROR: Opening listfile failed, " + str(err)
 
   with open(datadir + "/recording_data.pkl", "rb") as input_data:
     allrecordings = pickle.load(input_data)
@@ -56,8 +67,7 @@ def main():
   except Exception as exp:
     print "ERROR: Could not create elisa session"
     sys.exit(1)
-    
-  for text in input:  
+  for text in input:
 
     # Login
     for i in range(10):
@@ -71,12 +81,14 @@ def main():
       print "ERROR: Login failed 10 times in row, exiting"
       sys.exit(1)
 
-    match = re.match('^(\d+)\: (.+)',text)
-  
-    if not match:
-      continue;
+    match = re.match('^(\d+)\: (.+)\: (\d+:\d+:\d+)',text)
 
-    if verbose: print match.group(1) + " " + match.group(2)
+    if not match:
+        match = re.match('^(\d+)\: (.+)',text)
+        if not match:
+            continue;
+
+    if debug: print match.group(1) + " " + match.group(2)
 
     programId = match.group(1)
     outfilename = match.group(2).decode("utf8")
@@ -95,21 +107,29 @@ def main():
       print "WARNING: Stream not found, skipping"
       continue
 
-    ffmpeg_command = [ "ffmpeg", "-i", streamuri ]
+    ffmpeg_command = [ "ffmpeg"]
+    if len(match.groups()) == 3:
+        ffmpeg_command +=  [ "-ss", match.group(3) ]
+    ffmpeg_command += [ "-i", streamuri ]
 
-    if re.match('Yle', prog["channel"]):
-      ffmpeg_command += [ '-filter_complex', "[0:v][0:s]overlay" ]
-      print "From YLE channel " + prog["channel"] + ", overlaying subtitles"
+    if subtitles:
+        ffmpeg_command += [ '-filter_complex', "[0:v][0:s]overlay" ]
+    if subtitles2:
+        ffmpeg_command += [ '-filter_complex', "[0:v][0:s:1]overlay" ]
+    if not debug:
+        ffmpeg_command += [ '-loglevel', 'fatal' ]
 
     # input stream and codec options
     ffmpeg_command += ['-c:v', 'libx264', '-preset', 'medium', '-crf','22',
-            '-c:a', 'aac', '-strict', 'experimental', '-sn', '-loglevel', 'fatal',
+            '-c:a', 'aac', '-strict', 'experimental', '-sn',
             '-metadata', 'description=' + prog["description"],
             '-metadata', 'title='+ outfilename,
             outfilename + '.mkv'
             ]
-
-    print "Starting encoding: " + outfilename
+    if debug:
+        print "Starting encoding: " + " ".join(ffmpeg_command)
+    else:
+        print "Starting encoding: " + outfilename + '.mkv'
 
     try:
         returncode = call(ffmpeg_command)
@@ -117,17 +137,17 @@ def main():
       print "Interrupted from keyboard, exiting"
       os.remove(outfilename+".mkv")
       exit(0)
-      
+
     if returncode:
       print "=================== WARNING: Possible ffmpeg failure, returncode " + str(returncode)
-    
+
     # Close session (new one opened for each file)
     try:
       elisa.close()
     except Exception as exp:
       print "Closing connection failed. Will continue anyway."
       continue
-    
+
     # All files downloaded
 
 if __name__ == "__main__":
