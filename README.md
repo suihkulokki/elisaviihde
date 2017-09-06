@@ -18,7 +18,7 @@ Make a batch download list of the folder to download
 ```
 $ ./elisa-show-program-dump.py -f 3140525 -o kauniit.list
 ```
-The generated list is in form of "programid: filename
+The generated list is in form of "programid: filename".  
 Start batch download:
 
 ```
