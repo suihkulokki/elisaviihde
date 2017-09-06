@@ -9,10 +9,10 @@ def main():
   if len(sys.argv[1:]) < 4:
     print "ERROR: Usage:", sys.argv[0], "[-u username -l listfile]"
     print "        -s burn subtitles -2 alternative burn subtitles"
-    print "        -d debug"
+    print "        -d debug -o only download"
     sys.exit(2)
   try:
-    opts, args = getopt.getopt(sys.argv[1:], "d2su:l:", ["username"])
+    opts, args = getopt.getopt(sys.argv[1:], "d2osu:l:", ["username"])
   except getopt.GetoptError as err:
     print "ERROR:", str(err)
     sys.exit(2)
@@ -23,6 +23,7 @@ def main():
   verbose = False
 
   datadir = os.path.dirname(os.path.realpath(__file__))
+  download_only = False
   debug = False
   subtitles = False
   subtitles2 = False
@@ -35,6 +36,8 @@ def main():
       username = a
     elif o == "-d":
       debug = True
+    elif o == "-o":
+      download_only = True
     elif o == "-s":
       subtitles = True
     elif o == "-2":
@@ -107,6 +110,17 @@ def main():
       print "WARNING: Stream not found, skipping"
       continue
 
+    if download_only:
+      wget_command = [ "wget", streamuri, "-O", outfilename + ".ts" ]
+      print "Starting download: " + " ".join(wget_command)
+      try:
+        returncode = call(wget_command)
+      except KeyboardInterrupt as exp:
+        print "Interrupted from keyboard, exiting"
+        os.remove(outfilename+".mkv")
+        exit(0)
+      continue
+
     ffmpeg_command = [ "ffmpeg"]
     if len(match.groups()) == 3:
         ffmpeg_command +=  [ "-ss", match.group(3) ]
@@ -115,7 +129,7 @@ def main():
     if subtitles:
         ffmpeg_command += [ '-filter_complex', "[0:v][0:s]overlay" ]
     if subtitles2:
-        ffmpeg_command += [ '-filter_complex', "[0:v][0:s:1]overlay" ]
+        ffmpeg_command += [ '-filter_complex', "[0:v][0:4]overlay" ]
     if not debug:
         ffmpeg_command += [ '-loglevel', 'fatal' ]
 
@@ -126,10 +140,7 @@ def main():
             '-metadata', 'title='+ outfilename,
             outfilename + '.mkv'
             ]
-    if debug:
-        print "Starting encoding: " + " ".join(ffmpeg_command)
-    else:
-        print "Starting encoding: " + outfilename + '.mkv'
+    print "Starting encoding: " + " ".join(ffmpeg_command)
 
     try:
         returncode = call(ffmpeg_command)
